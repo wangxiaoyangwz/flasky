@@ -24,7 +24,7 @@ def internal_server_error(e):
 
 @app.route('/')
 def index():#视图函数-->生成响应
-    return render_template('index.html'current_time=datetime.utcnow())#将模板集成到程序
+    return render_template('index.html',current_time=datetime.utcnow())#将模板集成到程序
 
 
 @app.route('/user/<name>')
