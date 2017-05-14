@@ -34,3 +34,8 @@
     {% block page_content %}{% endblock %}<!--设置block标签，内容衍生模板定义-->
 </div>
 {% endblock %}
+
+{% block scripts %}
+{{super()}}
+{{moment.include_moment()}} <!--引入moment.js-->
+{% endblock %}

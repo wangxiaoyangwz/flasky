@@ -1,1 +1,11 @@
-<h1>Hello World!</h1>
+{% extends "base.html" %}
+
+{% block title %}Flasky{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1><p>the local date and time is {{ moment(current_time).format('LLL')}}.</p><!--获取当前时间-->
+     <p>that was {{ moment(current_time).fromNow(refresh=True)}} </p></h1><!--自动刷新，显示到现在经过了多长时间-->
+</div>
+{% endblock %}
+
