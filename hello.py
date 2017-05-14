@@ -8,6 +8,17 @@ app = Flask(__name__)#初始化
 manager = Manager(app)
 bootstrap = Bootstrap(app)
 
+
+@app.errorhandler(404)#定义错误页面
+def page_not_found(e):
+    return render_template('404.html'), 404
+    
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html'), 500
+
+
 @app.route('/')
 def index():#视图函数-->生成响应
     return render_template('index.html')#将模板集成到程序
