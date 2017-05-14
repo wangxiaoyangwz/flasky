@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
-from flask import Flask,render_template
-from flask_bootstrap import Bootstrap
+from flask import Flask, render_template, session, redirect, url_for
 from flask_script import Manager
+from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import Required
 
-app=Flask(__name__)
+app = Flask(__name__)
 app.config['SECRET_KEY'] = 'hard to guess string'#设置密匙，app.config字典存储
 
-manager=Manager(app)
-bootstrap=Bootstrap(app)
-moment=Moment(app)
+manager = Manager(app)
+bootstrap = Bootstrap(app)
+moment = Moment(app)
+
 
 class NameForm(FlaskForm): #表单类
     name = StringField('What is your name?', validators=[Required()])#属性有文本字段和submit按钮
@@ -23,13 +24,11 @@ class NameForm(FlaskForm): #表单类
 
 @app.route('/', methods=['GET', 'POST'])#methods视图函数注册为GET,POST请求的处理函数
 def index():
-    name = None
     form = NameForm()
-    if form.validate_on_submit():#检测函数
-        name = form.name.data#name存放由data获取的输入名
-        form.name.data = ''#清空表单字段
-    return render_template('index.html', form=form, name=name)#表单实例，将其通过参数form传入模板，将data获得的输入名字传到模版中
-
+    if form.validate_on_submit():        #检测函数
+        session['name'] = form.name.data #存储在用户会话中
+        return redirect(url_for('index')) #刷新后，重定向URL发出GET请求，只显示网页，重新打POST请求，刷新会再次提交表单
+    return render_template('index.html', form=form, name=session.get('name'))#表单实例，将其通过参数form传入模板，将data获得的输入名字传到模版中  #session.get()获取存储在用户会话名字
 
 @app.errorhandler(500)
 def internal_server_error(e):

@@ -1,47 +1,42 @@
-
-{% extends "bootstrap/base.html" %}
+{% extends "bootstrap/base.html" %}<!--在bootstrap/base基础上自定义功能-->
 
 {% block title %}Flasky{% endblock %}
 
 {% block head %}
-{{super()}}
-<link rel="shortcut icon" href="{{url_for('static',filename='favicon.ico')}}"
-   type="image/x-icon">
-<link rel="icon" href="{{url_for('static',filename='favicon.ico')}}"
-   type="image/x-icon">
+{{ super() }}<!--获取原来内容-->
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon"><!--从static目录中找文件favicon.ico,是个链接地址-->
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 {% endblock %}
 
 {% block navbar %}
 <div class="navbar navbar-inverse" role="navigation">
     <div class="container">
         <div class="navbar-header">
-        <button type="button" class="navbar-toggle" 
-        data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
             </button>
-        <a class="navbar-brand" href="/">Flasky</a>
-    </div>
-    <div class="navbar-collapse collapse">
-        <ul class="nav navbar-nav">
-            <li><a href="/">Home</a></li>
-        </ul>
-    </div>
+            <a class="navbar-brand" href="/">Flasky</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/">Home</a></li>
+            </ul>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    {% block page_content %}{% endblock %}
+    {% block page_content %}{% endblock %}<!--设置block标签，内容衍生模板定义-->
 </div>
 {% endblock %}
 
 {% block scripts %}
 {{super()}}
-<script type="text/javascript" scr="my-script.js"></script>
-{{moment.include_moment()}}
+{{moment.include_moment()}} <!--引入moment.js-->
 {% endblock %}
 
