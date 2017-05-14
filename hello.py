@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 from flask import Flask, render_template, session, redirect, url_for,flash
-from flask_script import Manager
+from flask_script import Manager,Shell
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_wtf import FlaskForm
@@ -49,6 +49,13 @@ class NameForm(FlaskForm): #表单类
                                                                     #字段对象附属一个验证函数——>输入合法？
                                                                       #validators是一个验证函数组成的列表
     submit = SubmitField('Submit')
+
+
+def make_shell_context():   #不懂！为shell命令添加一个上下文
+    return dict(app=app,db=db,User=User,Role=Role) #右边app是指hello.py中的实例对象，左边app是自己命名，以后可以在命令行中输入，就调用了app实例
+    
+manager.add_command("shell", Shell(make_context=make_shell_context))
+#make_context参数是规定要传入的上下文环境
 
 
 @app.route('/', methods=['GET', 'POST'])#methods视图函数注册为GET,POST请求的处理函数
