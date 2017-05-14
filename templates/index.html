@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}<!--bootstrap/wtf.html中定义了用bootstrap渲染Flask-wtf表单对象的辅助函数-->
 
 {% block title %}Flasky{% endblock %}
 
 {% block page_content %}
 <div class="page-header">
-    <h1><p>the local date and time is {{ moment(current_time).format('LLL')}}.</p>
-     <p>that was {{ moment(current_time).fromNow(refresh=True)}} </p></h1>
+    <h1><h1>Hello, {% if name %}{{ name }}{% else %}Stranger{% endif %}!</h1></h1>
 </div>
+{{ wtf.quick_form(form) }}<!--参数为Flask-wtf表单对象，作用是生成表单，渲染NameForm实例-->
 {% endblock %}
 
