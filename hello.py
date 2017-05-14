@@ -54,13 +54,18 @@ class NameForm(FlaskForm): #表单类
 @app.route('/', methods=['GET', 'POST'])#methods视图函数注册为GET,POST请求的处理函数
 def index():
     form = NameForm()
-    if form.validate_on_submit():        #检测函数
-        old_name = session.get('name')
-        if old_name is not None and old_name != form.name.data:#没有输入或输入不等于存在session中及以前输入的名字
-            flash('Looks like you have changed your name!')#显示
+    if form.validate_on_submit():       #检测函数
+        user = User.query.filter_by(username=form.name.data).first()#在数据库中加载用户名为form.name.data的用户
+        if user is None:#若数据库中不存在用户名为form.name.data的用户
+            user = User(username=form.name.data)#那便创建是改名字的用户
+            db.session.add(user)#将该用户对象写入会话中
+            session['known'] = False
+        else:
+            session['known'] = True#若已经存在，根据该值得不同可显示不同的欢迎消息
         session['name'] = form.name.data #然后在将新输入的名字存储在用户会话中
         return redirect(url_for('index')) #刷新后，重定向URL发出GET请求，只显示网页，重新打POST请求，刷新会再次提交表单
-    return render_template('index.html', form=form, name=session.get('name'))#表单实例，将其通过参数form传入模板，将data获得的输入名字传到模版中  #session.get()获取存储在用户会话名字
+    return render_template('index.html', form=form, name=session.get('name'),
+                           known=session.get('known', False))#表单实例，将其通过参数form传入模板，将data获得的输入名字传到模版中  #session.get()获取存储在用户会话名字
 
 @app.errorhandler(500)
 def internal_server_error(e):
