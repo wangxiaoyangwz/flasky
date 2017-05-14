@@ -2,6 +2,12 @@
 
 {% block title %}Flasky{% endblock %}
 
+{% block head %}
+{{ super() }}<!--获取原来内容-->
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon"><!--从static目录中找文件favicon.ico,是个链接地址-->
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+{% endblock %}
+
 {% block navbar %}
 <div class="navbar navbar-inverse" role="navigation">
     <div class="container">
