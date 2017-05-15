@@ -1,10 +1,10 @@
-{% extends "bootstrap/base.html" %}<!--在bootstrap/base基础上自定义功能-->
+{% extends "bootstrap/base.html" %}
 
 {% block title %}Flasky{% endblock %}
 
 {% block head %}
-{{ super() }}<!--获取原来内容-->
-<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon"><!--从static目录中找文件favicon.ico,是个链接地址-->
+{{ super() }}
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 {% endblock %}
 
@@ -31,18 +31,18 @@
 
 {% block content %}
 <div class="container">
-    {% block page_content %}{% endblock %}<!--设置block标签，内容衍生模板定义-->
-    {% for message in get_flashed_messages() %}<!--获取并渲染flash（）消息-->
+    {% for message in get_flashed_messages() %}
     <div class="alert alert-warning">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
         {{ message }}
     </div>
     {% endfor %}
+
+    {% block page_content %}{% endblock %}
 </div>
 {% endblock %}
 
 {% block scripts %}
-{{super()}}
-{{moment.include_moment()}} <!--引入moment.js-->
+{{ super() }}
+{{ moment.include_moment() }}
 {% endblock %}
-

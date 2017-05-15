@@ -1,17 +1,16 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}<!--bootstrap/wtf.html中定义了用bootstrap渲染Flask-wtf表单对象的辅助函数-->
+{% import "bootstrap/wtf.html" as wtf %}
 
 {% block title %}Flasky{% endblock %}
 
 {% block page_content %}
 <div class="page-header">
     <h1>Hello, {% if name %}{{ name }}{% else %}Stranger{% endif %}!</h1>
-    {% if not known %}<!--known=session.get(known)   True/False-->
+    {% if not known %}
     <p>Pleased to meet you!</p>
     {% else %}
     <p>Happy to see you again!</p>
     {% endif %}
 </div>
-{{ wtf.quick_form(form) }}<!--参数为Flask-wtf表单对象，作用是生成表单，渲染NameForm实例-->
+{{ wtf.quick_form(form) }}
 {% endblock %}
-
