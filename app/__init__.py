@@ -36,3 +36,8 @@ def create_app(config_name):#工厂函数，，参数是程序使用的配置名
 
     return app
 
+    from .auth import auth as auth_blueprint
+    app.register_blueprint(auth_blueprint,url_prefix='/auth')#url_prefix可选参数，路由会加上指定前缀
+                                                             #/logic会注册为/auth/logic
+    return app
+

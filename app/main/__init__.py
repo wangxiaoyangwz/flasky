@@ -3,7 +3,7 @@
 #在运行时创建程序，调用create_app后才能使用app.route
 
 #蓝本可定义路由，且处于休眠状态。注册到程序中，才成为程序的一部分
-#app/main/
+#app/main/__init__.py中创建蓝本
 
 from flask import Blueprint
 

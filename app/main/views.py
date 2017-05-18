@@ -8,7 +8,7 @@ from .forms import NameForm
 from .. import db
 from ..models import User
 
-@main.route('/', methods=['GET', 'POST'])
+@main.route('/', methods=['GET', 'POST'])#路由修饰器由蓝本提供，才可触发全局
 def index():
     form = NameForm()
     if form.validate_on_submit():#检测函数
