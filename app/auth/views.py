@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*- 
 from flask import render_template,redirect,request,url_for,flash
-from flask_login import login_user,login_required,logout_user
+from flask_login import login_user,login_required,logout_user,current_user
 from . import auth#.代表当前目录下的所有文件
 from ..models import User
 from .forms import LoginForm
+from .. import db
+from ..email import send_email
+from .forms import LoginForm, RegistrationForm
 
 @auth.route('/login', methods=['GET', 'POST'])#路由修饰器由蓝本提供
 def login():#登陆路由
@@ -25,3 +28,15 @@ def logout():
 	logout_user()#删除并重设用户会话
 	flash('You have been logged out.')
 	return redirect(url_for('main.index'))
+
+@auth.route('register',methods=['GET','POST'])
+def register():
+	form=RegistrationForm()
+	if form.validate_on_submit():
+		user=User(email=form.email.data,
+			      username=form.username.data,
+			      password=form.password.data)
+		db.session.add(user)
+		flash('You can now login')
+		return redirect(url_for('auth.login'))
+	return render_template('auth/register.html',form=form)
