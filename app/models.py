@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from . import db
+from . import db,login_manager
 
 from werkzeug.security import generate_password_hash,check_password_hash
+from flask_login import UserMixin
 #保证数据库的安全，存储密码的散列值，核对密码时比较的是散列值，计算散列函数可复现
 #生成散列值无法还原原来的密码
 
@@ -15,16 +16,16 @@ class Role(db.Model):
         return '<Role %r>' % self.name
 
 
-class User(db.Model):
+class User(UserMixin,db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
+    email=db.Column(db.String(64),unique=True,index=True)
     username = db.Column(db.String(64), unique=True, index=True)
+    password_hash=db.column(db.String(128))
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 
     def __repr__(self):
         return '<User %r>' % self.username
-
-    password_hash=db.column(db.String(128))
 
     @property 
     def password(self):
@@ -37,3 +38,9 @@ class User(db.Model):
     def verify_password(self,password):
         return check_password_hash(self.password_hash,password)#参数数据库中取出的密码散列值，和用户输入的密码
                                                #check_password_hash(hash,password)
+
+    
+
+@login_manager.user_loader#加载用户的回调函数
+def load_user(user_id):
+    return User.query.get(int(user_id))#参数Unicode字符串形式表示的用户标识符，返回用户对象

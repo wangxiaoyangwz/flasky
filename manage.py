@@ -1,13 +1,12 @@
  # -*- coding: utf-8 -*- 
 #启动脚本
 import os
-from app import create_app,db
-from app.models import User,Role
-from flask_script import Manager,Shell
-from flask_migrate import Migrate,MigrateCommand
-import unittest
+from app import create_app, db
+from app.models import User, Role
+from flask_script import Manager, Shell
+from flask_migrate import Migrate, MigrateCommand
 
-app=create_app(os.getenv('FLASK_CONFIG') or 'default')#先创建程序实例，在__init__.py中定义，
+app = create_app(os.getenv('FLASK_CONFIG') or 'default')#先创建程序实例，在__init__.py中定义，
                                                       #参数从环境变量FLASK_CONFIG中读取配置名or默认值
 manager=Manager(app)
 migrate=Migrate(app,db)
