@@ -7,6 +7,7 @@ from .forms import LoginForm
 from .. import db
 from ..email import send_email
 from .forms import LoginForm, RegistrationForm
+from flask_login import current_user
 
 @auth.route('/login', methods=['GET', 'POST'])#路由修饰器由蓝本提供
 def login():#登陆路由
@@ -37,6 +38,46 @@ def register():
 			      username=form.username.data,
 			      password=form.password.data)
 		db.session.add(user)
-		flash('You can now login')
-		return redirect(url_for('auth.login'))
+		db.session.commit()
+		token=user.generate_confirmation_token()#生成令牌
+		send_email(user.email,'Confirm Your Account','auth/email/confirm',user=user,token=token)
+		flash('A confirmation email has been sent to you by email')
+		return redirect(url_for('main.index'))
 	return render_template('auth/register.html',form=form)
+
+@auth.route('/confirm/<token>')#确认账户用户
+@login_required#保护路由，要先注册才能，登陆后才能执行以下
+def confirm(token):
+	if current_user.confirmed:#确认
+		return redirect(url_for('main.index'))#到首页
+	if current_user.confirm(token):#直接调用
+		flash('You have confirmed your account.thanks!')
+	else:
+		flash('The confirmation link is invalid or has expired.')
+	return redirect(url_for('main.index'))
+
+#决定用户确认账户前可以做什么操作，在获取权限之前确定账户
+@auth.before_app_request#钩子，在每次请求前运行
+def before_request():
+	if current_user.is_authenticated:
+		current_user.ping()#在此处调用ping()，更新登陆用户访问时间
+	        if not current_user.confirmed \
+	                and request.endpoint[:5]!='auth.':
+	                                                   #访问认证路由获取权限，路由的作用，让用户确认账户或执行账户管理操作
+	                                                #以上三个都满足重定向到auth.unconfirmed路由，显示确认账户信息的页面
+	            return redirect(url_for('auth.unconfirmed'))
+
+@auth.route('/unconfirmed')
+def unconfirmed():
+	if current_user.is_anonymous or current_user.confirmed:
+		return redirect(url_for('main.index'))
+	return render_template('auth/unconfirmed.html')
+
+@auth.route('/confirm')#current_user重新注册路由
+@login_required
+def resend_confirmation():
+	token=current_user.generate_confirmation_token()
+	send_email(current_user.email,'Confirm Your Account',
+		       'auth/email/confirm',user=current_user,token=token)
+	flash('A new confirmation email has been sent to you by email.')
+	return redirect(url_for('main.index'))
