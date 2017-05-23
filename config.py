@@ -7,7 +7,7 @@ class Config:#基类包含通用配置
     SECRET_KEY=os.environ.get('SECRET_KEY')or 'hard to guess string'#密钥
     SQLALCHEMY_COMMIT_ON_TEARDOWN=True#请求结束自动提交数据库变动
     FLASKY_MAIL_SUBJECT_PREFIX='[Flasky]'#邮件主题前缀
-    FLASKY_MAIL_SENDER = 'Flasky Admin <flasky@example.com>'#发件人地址
+    FLASKY_MAIL_SENDER = '18856858578@163.com'#发件人地址
     FLASKY_ADMIN = os.environ.get('FLASKY_ADMIN')#从环境变量中获取收件人地址
 
     @staticmethod#执行对当前环境的配置的初始化，参数是程序实例
@@ -19,11 +19,11 @@ class Config:#基类包含通用配置
 
 class DevelopmentConfig(Config):#开发配置
     DEBUG=True
-    MAIL_SERVER='smtp.qq.com'
-    MAIL_PORT=465
-    MAIL_USE_TLS=False 
-    MAIL_USERNAME=os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWOED=os.environ.get('MAIL_PASSWORD')
+    MAIL_SERVER='smtp.163.com'
+    MAIL_PORT=25
+    MAIL_USE_TLS=True 
+    MAIL_USERNAME='18856858578@163.com'
+    MAIL_PASSWOED='fendouingjiayou4'
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')#每个环境都使用不同的数据库，程序可以在不同的环境中运行
 
