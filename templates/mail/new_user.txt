@@ -1,1 +1,0 @@
-User {{ user.username }} has joined,wo bu shi la ji you jian .
