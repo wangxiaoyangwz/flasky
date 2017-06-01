@@ -26,8 +26,28 @@
 {% block content %}<!--主体内容-->
 <div class="container">
     <div class="page-header">
-        <h1>Hello, {{ name }}!</h1>
+        <h1>{{user.username}}</h1>
+        {% if user.name or user.location %}
+        <p><!--name和location在同一个<p>元素中渲染，至少定义两个中的一个p才创建-->
+            {% if user.name %}{{ user.name}}{% endif %}
+            {% if user.location %}
+                From <a href="http://maps.google.com/?q={{ user.location }}"><!--location字段渲染成谷歌地图连接-->
+                    {{user.location}}
+                </a>
+            {% endif %}
+        </p>
+        {% endif %}
+        {% if current_user.is_administrator() %}<!--如果是管理员登陆，显示用户的电子邮件地址渲染成mailto链接-->
+        <p>
+            <a href="mailto:{{user.email}}">{{user.email}}</a>
+        </p>
+        {% endif %}
+        {% if user.about_me %}<p>{{user.about_me}}</p>{% endif %}
+        <p>
+            Member since {{moment(user.member_since).format('L')}}.
+            Last seen {{moment(user.last_seen).fromNow()}}
+        </p>
     </div>
 </div>
-{% endblock %
+{% endblock %}
 

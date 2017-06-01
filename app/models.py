@@ -4,6 +4,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import UserMixin
+from datetime import datetime
 
 #保证数据库的安全，存储密码的散列值，核对密码时比较的是散列值，计算散列函数可复现
 #生成散列值无法还原原来的密码
@@ -57,6 +58,12 @@ class User(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
     confirmed=db.Column(db.Boolean,default=False)
+    name=db.Column(db.String(64))#真实姓名
+    location=db.Column(db.String(64))#所在地
+    about_me=db.Column(db.Text())#自我介绍
+    member_since=db.Column(db.DateTime(),default=datetime.utcnow)#注册日期
+    last_seen=db.Column(db.DateTime(),default=datetime.utcnow)#最后访问日期
+
 
     def __init__(self,**kwargs):#定义默认角色是用户，是构造函数
         super(User,self).__init__(**kwargs)#调用基类的构造函数
@@ -65,6 +72,10 @@ class User(UserMixin, db.Model):
                 self.role=Role.query.filter_by(permission=0xff).first()#将权限是0xff的角色赋给基类对象
             if self.role is None:
                 self.role=Role.query.filter_by(default=True).first()#默认角色赋给基类对象
+    
+    def ping(self):#刷新用户的最后访问时间
+        self.last_seen=datetime.utcnow()
+        db.session.add(self)
 
 
     @property 
