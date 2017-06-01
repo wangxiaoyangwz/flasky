@@ -22,3 +22,16 @@ class UserModelTestCase(unittest.TestCase):
 		u=User(password='cat')
 		u2=User(password='cat')
 		self.assertTrue(u.password_hash!=u2.password_hash)
+
+	
+	def test_roles_and_permissions(Self):
+		Role.insert.roles()#数据库中创建角色
+		u=User(email='18856858578@163.com',password='cat')
+		self.assertTrue(u.can(Permission.WRITE_ARTICLES))
+		self.assertFalse(u.can(Permission.MODERATE_COMMENTS))#断言用户没有管理评论的权限
+
+	def test_anonymous_user(self):#匿名用户
+		u=AnonymousUser()
+		self.assertFalse(u.can(Permission.FOLLOW))
+
+

@@ -10,3 +10,9 @@ from flask import Blueprint
 main=Blueprint('main',__name__)#实例化Bluepirnt类对象，参数1、蓝本名字 2、蓝本所在包和模块，大多数使用python的__name__变量
 
 from . import views,errors#导入这两个模块将程序与蓝本联系起来，在脚本末尾导入，避免循环导入，在这两个模版中要导入蓝本main
+from ..models import Permission
+
+
+@main.app_context_processor#Permission类加入模版上下文
+def inject_permissions():#上下文处理器，可让Permission变量在全局中可访问
+	return dict(Permission=Permission)

@@ -8,11 +8,42 @@ from flask_login import UserMixin
 #保证数据库的安全，存储密码的散列值，核对密码时比较的是散列值，计算散列函数可复现
 #生成散列值无法还原原来的密码
 
+class Permission:#权限常量
+    FOLLOW=0x01
+    COMMENT=0x02
+    WRITE_ARTICLES=0x04
+    MODERATE_COMMENTS=0x08
+    ADMINISTER=0x80
+
 class Role(db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
     users = db.relationship('User', backref='role', lazy='dynamic')
+    default=db.Column(db.Boolean,default=False,index=True)#default默认字段，角色设为默认值
+    permissions=db.Column(db.Integer)#整数，位标志
+
+    @staticmethod
+    def insert_roles():#数据库中创建角色
+        roles={  #每个角色的权限，User是默认角色
+            'User':(Permission.FOLLOW|
+                     Permission.COMMENT|
+                     Permission.WRITE_ARTICLES,True),#！！逗号不能忘！！
+            'Moderator': (Permission.FOLLOW |
+                          Permission.COMMENT|
+                          Permission.WRITE_ARTICLES|
+                          Permission.MODERATE_COMMENTS,True),
+            'Administer':(0xff,False)
+        }
+
+        for r in roles:#若角色名name是r在数据库中
+            role=Role.query.filter_by(name=r).first()#查找现有角色
+            if role is None:#角色名不存在
+                role=Role(name=r)#加入数据库
+            role.permission=roles[r][0]#修改权限
+            role.default=roles[r][1]
+            db.session.add(role)
+        db.session.commit()
 
     def __repr__(self):
         return '<Role %r>' % self.name
@@ -26,6 +57,15 @@ class User(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
     confirmed=db.Column(db.Boolean,default=False)
+
+    def __init__(self,**kwargs):#定义默认角色是用户，是构造函数
+        super(User,self).__init__(**kwargs)#调用基类的构造函数
+        if self.role is None:#若基类对象没有定义对象
+            if self.email==current_app.config['FLASKY_ADMIN']:#如果基类对象的email和当前程序的环境变量相同时
+                self.role=Role.query.filter_by(permission=0xff).first()#将权限是0xff的角色赋给基类对象
+            if self.role is None:
+                self.role=Role.query.filter_by(default=True).first()#默认角色赋给基类对象
+
 
     @property 
     def password(self):
@@ -92,12 +132,27 @@ class User(UserMixin, db.Model):
         db.session.add(self)
         return True
 
+    def can(self,permissions):#参数是某种权限，检查用户是否有某种权限
+        return self.role is not None and \
+            (self.role.permission&permissions)==permissions#位与操作
+
+    def is_administrator(self):
+        return self.can(Permission.ADMINISTER)
+
+    # def __repr__(self):
+    #     return '<User %r>' % self.username
+
     def __repr__(self):
         return '<User %r>' % self.username
 
+class AnonymousUser():#用户未登录时current_user的值
+    def can(self,permissions):#未登录可以调用can(),is_administrator()
+        return False
 
-    def __repr__(self):
-        return '<User %r>' % self.username
+    def is_administrator(self):#但是没有任何的权限
+        return False
+
+login_manager.anonymous_user=AnonymousUser
 
 @login_manager.user_loader#加载用户的回调函数
 def load_user(user_id):
