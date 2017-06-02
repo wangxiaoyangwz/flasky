@@ -3,7 +3,7 @@ from . import db,login_manager
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app
 from werkzeug.security import generate_password_hash,check_password_hash
-from flask_login import UserMixin
+from flask_login import UserMixin,AnonymousUserMixin#!!
 from datetime import datetime
 
 #保证数据库的安全，存储密码的散列值，核对密码时比较的是散列值，计算散列函数可复现
@@ -156,7 +156,8 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-class AnonymousUser():#用户未登录时current_user的值
+
+class AnonymousUser(AnonymousUserMixin):#用户未登录时current_user的值
     def can(self,permissions):#未登录可以调用can(),is_administrator()
         return False
 
@@ -168,3 +169,4 @@ login_manager.anonymous_user=AnonymousUser
 @login_manager.user_loader#加载用户的回调函数
 def load_user(user_id):
     return User.query.get(int(user_id))#参数Unicode字符串形式表示的用户标识符，返回用户对象
+

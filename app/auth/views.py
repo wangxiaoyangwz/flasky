@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*- 
-from flask import render_template,redirect,request,url_for,flash
-from flask_login import login_user, logout_user, login_required, \
-    current_user
-from . import auth#.代表当前目录下的所有文件
-from ..models import User
-from .forms import LoginForm
+from flask import render_template, redirect, request, url_for, flash
+from flask_login import login_user, logout_user, login_required, current_user
+from . import auth
 from .. import db
+from ..models import User
 from ..email import send_email
-from .forms import LoginForm, RegistrationForm, ChangePasswordForm,\
-    PasswordResetRequestForm, PasswordResetForm, ChangeEmailForm
+from .forms import LoginForm, RegistrationForm, ChangePasswordForm,PasswordResetRequestForm, PasswordResetForm, ChangeEmailForm
 
 
 
@@ -63,11 +60,11 @@ def confirm(token):#令牌在user模型中创建，此处只需调用confirm()
 
 @auth.before_app_request#决定用户确认前可以做什么操作
 def before_request():#允许未确认的用户登陆
-    if current_user.is_authenticated \
-            and not current_user.confirmed \
-            and request.endpoint[:5]!='auth.' \
-            and request.endpoint!='static':
-        return redirect(url_for('auth.unconfirmed'))#但是显示未登录的页面
+    if current_user.is_authenticated:
+        current_user.ping()
+        if not current_user.confirmed \
+                and request.endpoint[:5]!='auth.':
+            return redirect(url_for('auth.unconfirmed'))#但是显示未登录的页面
 
 @auth.route('/unconfirmed')
 def unconfirmed():
