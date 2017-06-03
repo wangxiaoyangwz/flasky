@@ -23,7 +23,7 @@ class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
     users = db.relationship('User', backref='role', lazy='dynamic')
-    default=db.Column(db.Boolean,default=False,index=True)#default默认字段，角色设为默认值
+    default=db.Column(db.Boolean,default=True,index=False)#default默认字段，角色设为默认值
     permissions=db.Column(db.Integer)#整数，位标志
 
     @staticmethod
@@ -51,6 +51,13 @@ class Role(db.Model):
     def __repr__(self):
         return '<Role %r>' % self.name
 
+class Post(db.Model):
+    __tablename__='posts'
+    id=db.Column(db.Integer,primary_key=True)
+    body=db.Column(db.Text)
+    timestamp=db.Column(db.DateTime,index=True,default=datetime.utcnow)#时间戳
+    author_id=db.Column(db.Integer,db.ForeignKey('users.id'))#作者ip
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -66,6 +73,7 @@ class User(UserMixin, db.Model):
     member_since=db.Column(db.DateTime(),default=datetime.utcnow)#注册日期
     last_seen=db.Column(db.DateTime(),default=datetime.utcnow)#最后访问日期
     avatar_hash=db.Column(db.String(32))
+    posts=db.relationship('Post',backref='author',lazy='dynamic')
 
 
     def __init__(self,**kwargs):#定义默认角色是用户，是构造函数
@@ -184,4 +192,5 @@ login_manager.anonymous_user=AnonymousUser
 @login_manager.user_loader#加载用户的回调函数
 def load_user(user_id):
     return User.query.get(int(user_id))#参数Unicode字符串形式表示的用户标识符，返回用户对象
+
 

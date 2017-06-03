@@ -3,14 +3,24 @@
 from flask import render_template, redirect, url_for, abort, flash
 from flask_login import login_required, current_user
 from . import main
-from .forms import EditProfileForm,EditProfileAdminForm
+from .forms import EditProfileForm,EditProfileAdminForm,PostForm,NameForm
 from .. import db
-from ..models import Role, User
+from ..models import Role, User,Permission,Post
 from ..decorators import admin_required
 
-@main.route('/')
-def index():
-    return render_template('index.html')
+
+@main.route('/',methods=['GET','POST'])
+def index():#路由，处理博客文章，
+	form=PostForm()
+	# form1=NameForm()
+	if form.validate_on_submit():
+	    post=Post(body=form.body.data,author=current_user._get_current_object())#创建post实例，内容从表单中获取,作者是，P116
+	                                                                            #数据库需要真正的用户对象，_get_current_object()获取真正的用户对象
+	                                                                            #current_user是线程内代理对象实现，类似于用户对象，实际上是轻度包装，
+	    db.session.add(post)#文章传入数据库
+	    return redirect(url_for('.index'))
+	posts=Post.query.order_by(Post.timestamp.desc()).all()#从数据库中查询，并按照时间排序
+	return render_template('index.html',form=form,posts=posts)
 
 @main.route('/user/<username>')#资料页面的路由
 def user(username):

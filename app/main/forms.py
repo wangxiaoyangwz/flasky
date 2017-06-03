@@ -47,3 +47,8 @@ class EditProfileAdminForm(FlaskForm):#管理员使用的资料编辑器
 		    raise ValidationError('Usname already in use.')
 
 
+class PostForm(FlaskForm):#博客文章表单
+	body=TextAreaField("What's on you mind?",validators=[Required()])#内容主体
+	submit=SubmitField('Submit')#提交
+
+
