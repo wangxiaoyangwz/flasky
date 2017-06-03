@@ -65,6 +65,7 @@ class User(UserMixin, db.Model):
     about_me=db.Column(db.Text())#自我介绍
     member_since=db.Column(db.DateTime(),default=datetime.utcnow)#注册日期
     last_seen=db.Column(db.DateTime(),default=datetime.utcnow)#最后访问日期
+    avatar_hash=db.Column(db.String(32))
 
 
     def __init__(self,**kwargs):#定义默认角色是用户，是构造函数
@@ -74,6 +75,8 @@ class User(UserMixin, db.Model):
                 self.role=Role.query.filter_by(permission=0xff).first()#将权限是0xff的角色赋给基类对象
             if self.role is None:
                 self.role=Role.query.filter_by(default=True).first()#默认角色赋给基类对象
+            if self.email is not None and self.avatar_hash is None:#email不存在和散列值不存在
+                self.avatar_hash=hashlib.md5(self.email.encode('utf-8')).hexdigest()#生成md5 hash
     
     def ping(self):#刷新用户的最后访问时间
         self.last_seen=datetime.utcnow()
@@ -142,6 +145,7 @@ class User(UserMixin, db.Model):
         if self.query.filter_by(email=new_email).first() is not None:
             return False
         self.email = new_email
+        self.avatar_hash=hashlib.md5(self.email.encode('utf-8')).hexdigest()#email改变，散列值也改变
         db.session.add(self)
         return True
 
@@ -157,7 +161,7 @@ class User(UserMixin, db.Model):
             url='https://secure.gravatar.com/avatar'
         else:
             url='http://www.gravatar.com/avatar'
-        hash=hashlib.md5(self.email.encode('utf-8')).hexdigest()
+        hash=self.avatar_hash or hashlib.md5(self.email.encode('utf-8')).hexdigest()
         return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
                 url=url,hash=hash,size=size,default=default,rating=rating)
 
