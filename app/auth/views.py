@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*- 
+#与用户认证相关的路由
 from flask import render_template, redirect, request, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from . import auth
@@ -25,14 +26,14 @@ def login():#登陆路由
 
 @auth.route('/logout')
 @login_required
-def logout():
+def logout():#退出路由
     logout_user()#删除并重设用户会话
     flash('You have been logged out.')
     return redirect(url_for('main.index'))
 
 
 @auth.route('/register', methods=['GET', 'POST'])
-def register():
+def register():#注册路由
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(email=form.email.data,
@@ -160,4 +161,6 @@ def change_email(token):
     else:
         flash('Invalid request.')
     return redirect(url_for('main.index'))
+
+
 

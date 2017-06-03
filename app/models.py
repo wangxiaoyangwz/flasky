@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from . import db,login_manager
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from flask import current_app
+from flask import current_app,request
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import UserMixin,AnonymousUserMixin#!!
 from datetime import datetime
+import hashlib
+
 
 #保证数据库的安全，存储密码的散列值，核对密码时比较的是散列值，计算散列函数可复现
 #生成散列值无法还原原来的密码
@@ -149,6 +151,15 @@ class User(UserMixin, db.Model):
 
     def is_administrator(self):
         return self.can(Permission.ADMINISTER)
+
+    def gravatar(self,size=100,default='identicon',rating='g'):
+        if request.is_secure:
+            url='https://secure.gravatar.com/avatar'
+        else:
+            url='http://www.gravatar.com/avatar'
+        hash=hashlib.md5(self.email.encode('utf-8')).hexdigest()
+        return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
+                url=url,hash=hash,size=size,default=default,rating=rating)
 
     # def __repr__(self):
     #     return '<User %r>' % self.username
