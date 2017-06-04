@@ -16,6 +16,7 @@ class Config:#基类包含通用配置
     FLASKY_MAIL_SUBJECT_PREFIX='[Flasky]'#邮件主题前缀
     FLASKY_MAIL_SENDER = '18856858578@163.com'#发件人地址
     FLASKY_ADMIN = '18856858578@163.com'#从环境变量中获取收件人地址
+    FLASKY_POSTS_PER_PAGE = 20
 
     @staticmethod#执行对当前环境的配置的初始化，参数是程序实例
     def init_app(app):

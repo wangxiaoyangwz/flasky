@@ -57,6 +57,7 @@ class Post(db.Model):
     body=db.Column(db.Text)
     timestamp=db.Column(db.DateTime,index=True,default=datetime.utcnow)#时间戳
     author_id=db.Column(db.Integer,db.ForeignKey('users.id'))#作者ip
+    
     @staticmethod
     def generate_fake(count=100):
         from random import seed,randint
@@ -66,9 +67,12 @@ class Post(db.Model):
                #认为是系统提供的一个接口，一般随机数都是一个伪随机数，使用种子之后，能在概率上产生近似的随机数值
                #伪随机数的生成一般依赖于对每个初始值做操作，这里的某个初始值一般是由生成器生成的，这个初始值一般会根据当前时间产生，
                #所以你在不同的时间调用，产生的值是不同的，如果你使用相同的种子，则产生的随机数是相同的。
+        user_count=User.query.count()
         for i in range(count):
             u=User.query.offset(randint(0,user_count-1)).first()#offset偏移原查询结果，返回一个新查询，跳过参数中指定的记录数量
-            p=Post(body=forgery_py.lorem_ipsum.sentence(randint(1,3)),author=u)#简介
+            p=Post(body=forgery_py.lorem_ipsum.sentences(randint(1,3)),
+                   timestamp=forgery_py.date.date(True),
+                   author=u)#简介
             db.session.add(p)
             db.session.commit()
 
@@ -189,12 +193,12 @@ class User(UserMixin, db.Model):
 
     @staticmethod#生成虚拟用户和博客文章
     def generate_fake(count=100):
-        from sqlalchemy.exc import IntegerityError
+        from sqlalchemy.exc import IntegrityError
         from random import seed
         import forgery_py
 
         seed()
-        for i in range[count]:
+        for i in range(count):
             u=User(
                    email=forgery_py.internet.email_address(),#地址信息
                    username=forgery_py.internet.user_name(True),
@@ -207,7 +211,7 @@ class User(UserMixin, db.Model):
             db.session.add(u)
             try:
                 db.session.commit()
-            except IntegerityError:#forgery_by随机生成的信息可能在数据库中有重复，抛出integrityError异常
+            except IntegrityError:#forgery_by随机生成的信息可能在数据库中有重复，抛出integrityError异常
                 db.session.rollback()#回滚会话，生成重复内容不会写入数据库
 
     # def __repr__(self):

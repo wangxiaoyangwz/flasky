@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*- 
 #蓝本中定义程序路由
-from flask import render_template, redirect, url_for, abort, flash
+from flask import render_template, redirect, url_for, abort, flash,request,current_app
 from flask_login import login_required, current_user
 from . import main
 from .forms import EditProfileForm,EditProfileAdminForm,PostForm,NameForm
@@ -10,17 +10,24 @@ from ..decorators import admin_required
 
 
 @main.route('/',methods=['GET','POST'])
-def index():#路由，处理博客文章，
+def index():#路由，处理博客文章，分页显示博客文章
 	form=PostForm()
 	# form1=NameForm()
 	if form.validate_on_submit():
 	    post=Post(body=form.body.data,author=current_user._get_current_object())#创建post实例，内容从表单中获取,作者是，P116
 	                                                                            #数据库需要真正的用户对象，_get_current_object()获取真正的用户对象
-	                                                                            #current_user是线程内代理对象实现，类似于用户对象，实际上是轻度包装，
+	                                                                            #current_user是线程内代理对象实现，类似于用户对象，实际上是轻度包装
 	    db.session.add(post)#文章传入数据库
 	    return redirect(url_for('.index'))
 	posts=Post.query.order_by(Post.timestamp.desc()).all()#从数据库中查询，并按照时间排序
-	return render_template('index.html',form=form,posts=posts)
+	page=request.args.get('page',1,type=int)#c查询字符串request.args-->指出渲染的页数，没有明确指出，默认第一页，type=int 保证参数不能换成整数时，返回默认值
+	pagination=Post.query.order_by(Post.timestamp.desc()).paginate(#为显示某页的记录，all()换成paginate(),参数1.【必须】页数 2、指定每页显示的记录数量
+		                                                           #若没有指定默认20 
+		                                                           #
+		page,per_page=current_app.config['FLASKY_POSTS_PER_PAGE'], #per_page的值从程序的环境变量FLASKY_POSTS_PER_PAGE中读取
+		error_out=False)#3、True时请求超出范围，返回404，False时返回空列表
+	posts=pagination.items
+	return render_template('index.html',form=form,posts=posts,pagination=pagination)
 
 @main.route('/user/<username>')#资料页面的路由
 def user(username):

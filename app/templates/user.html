@@ -37,5 +37,10 @@
 </div>
 <h3>Post by {{user.username}} </h3>
 {% include '_posts.html' %} <!-- 遇到两个完全相等的片段时使用include -->
+{% if pagination %}
+<div class="pagination">
+    {{ macros.pagination_widget(pagination, '.user', username=user.username) }}
+</div>
+{% endif %}
 {% endblock %}
 
