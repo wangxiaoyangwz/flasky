@@ -13,7 +13,7 @@ from ..decorators import admin_required
 def index():#路由，处理博客文章，分页显示博客文章
 	form=PostForm()
 	# form1=NameForm()
-	if form.validate_on_submit():
+	if current_user.is_authenticated and form.validate_on_submit():
 	    post=Post(body=form.body.data,author=current_user._get_current_object())#创建post实例，内容从表单中获取,作者是，P116
 	                                                                            #数据库需要真正的用户对象，_get_current_object()获取真正的用户对象
 	                                                                            #current_user是线程内代理对象实现，类似于用户对象，实际上是轻度包装
@@ -85,3 +85,20 @@ def edit_profile_admin(id):
 def post(id):
 	post=Post.query.get_or_404(id)
 	return render_template('post.html',posts=[post])#post.html接受列表作为参数，列表是要渲染的文章
+
+
+@main.route('/edit/<int:id>',methods=['GET','POST'])
+@login_required
+def edit(id):
+	post=Post.query.get_or_404(id)
+	if current_user!=post.author and \
+	        not current_user.can(Permission.ADMINISTED):#允许文章作者和管理员编辑
+	    abort(403)
+	form=PostForm()
+	if form.validate_on_submit():
+		post.body=form.body.data
+		db.session.add(post)
+		flash('The Post has been updated.')
+		return redirect(url_for('.post',id=post.id))
+	form.body.data=post.body
+	return render_template('edit_post.html',form=form)

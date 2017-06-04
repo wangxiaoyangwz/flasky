@@ -37,15 +37,15 @@ class Role(db.Model):
             'Moderator': (Permission.FOLLOW |
                           Permission.COMMENT|
                           Permission.WRITE_ARTICLES|
-                          Permission.MODERATE_COMMENTS,True),
-            'Administer':(0xff,False)
+                          Permission.MODERATE_COMMENTS,False),
+            'Administrator':(0xff,False)
         }
 
         for r in roles:#若角色名name是r在数据库中
             role=Role.query.filter_by(name=r).first()#查找现有角色
             if role is None:#角色名不存在
                 role=Role(name=r)#加入数据库
-            role.permission=roles[r][0]#修改权限
+            role.permissions=roles[r][0]#修改权限
             role.default=roles[r][1]
             db.session.add(role)
         db.session.commit()
@@ -110,8 +110,8 @@ class User(UserMixin, db.Model):
     def __init__(self,**kwargs):#定义默认角色是用户，是构造函数
         super(User,self).__init__(**kwargs)#调用基类的构造函数
         if self.role is None:#若基类对象没有定义对象
-            if self.email==current_app.config['FLASKY_ADMIN']:#如果基类对象的email和当前程序的环境变量相同时
-                self.role=Role.query.filter_by(permission=0xff).first()#将权限是0xff的角色赋给基类对象
+            if self.email=='18856858578@163.com':#如果基类对象的email和当前程序的环境变量相同时
+                self.role=Role.query.filter_by(permissions=0xff).first()#将权限是0xff的角色赋给基类对象
             if self.role is None:
                 self.role=Role.query.filter_by(default=True).first()#默认角色赋给基类对象
             if self.email is not None and self.avatar_hash is None:#email不存在和散列值不存在
@@ -190,7 +190,7 @@ class User(UserMixin, db.Model):
 
     def can(self,permissions):#参数是某种权限，检查用户是否有某种权限
         return self.role is not None and \
-            (self.role.permission&permissions)==permissions#位与操作
+            (self.role.permissions&permissions)==permissions#位与操作
 
     def is_administrator(self):
         return self.can(Permission.ADMINISTER)
