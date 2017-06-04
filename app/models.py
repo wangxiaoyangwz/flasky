@@ -57,6 +57,20 @@ class Post(db.Model):
     body=db.Column(db.Text)
     timestamp=db.Column(db.DateTime,index=True,default=datetime.utcnow)#时间戳
     author_id=db.Column(db.Integer,db.ForeignKey('users.id'))#作者ip
+    @staticmethod
+    def generate_fake(count=100):
+        from random import seed,randint
+        import forgery_py
+
+        seed()#python标准库里内置的随机数种子
+               #认为是系统提供的一个接口，一般随机数都是一个伪随机数，使用种子之后，能在概率上产生近似的随机数值
+               #伪随机数的生成一般依赖于对每个初始值做操作，这里的某个初始值一般是由生成器生成的，这个初始值一般会根据当前时间产生，
+               #所以你在不同的时间调用，产生的值是不同的，如果你使用相同的种子，则产生的随机数是相同的。
+        for i in range(count):
+            u=User.query.offset(randint(0,user_count-1)).first()#offset偏移原查询结果，返回一个新查询，跳过参数中指定的记录数量
+            p=Post(body=forgery_py.lorem_ipsum.sentence(randint(1,3)),author=u)#简介
+            db.session.add(p)
+            db.session.commit()
 
 
 class User(UserMixin, db.Model):
@@ -172,6 +186,29 @@ class User(UserMixin, db.Model):
         hash=self.avatar_hash or hashlib.md5(self.email.encode('utf-8')).hexdigest()
         return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
                 url=url,hash=hash,size=size,default=default,rating=rating)
+
+    @staticmethod#生成虚拟用户和博客文章
+    def generate_fake(count=100):
+        from sqlalchemy.exc import IntegerityError
+        from random import seed
+        import forgery_py
+
+        seed()
+        for i in range[count]:
+            u=User(
+                   email=forgery_py.internet.email_address(),#地址信息
+                   username=forgery_py.internet.user_name(True),
+                   password=forgery_py.lorem_ipsum.word(),
+                   confirmed=True,
+                   name=forgery_py.name.full_name(),
+                   location=forgery_py.address.city(),
+                   about_me=forgery_py.lorem_ipsum.sentence(),
+                   member_since=forgery_py.date.date(True))
+            db.session.add(u)
+            try:
+                db.session.commit()
+            except IntegerityError:#forgery_by随机生成的信息可能在数据库中有重复，抛出integrityError异常
+                db.session.rollback()#回滚会话，生成重复内容不会写入数据库
 
     # def __repr__(self):
     #     return '<User %r>' % self.username
