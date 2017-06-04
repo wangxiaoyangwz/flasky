@@ -6,6 +6,8 @@ from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import UserMixin,AnonymousUserMixin#!!
 from datetime import datetime
 import hashlib
+from markdown import markdown
+import bleach
 
 
 #保证数据库的安全，存储密码的散列值，核对密码时比较的是散列值，计算散列函数可复现
@@ -57,6 +59,7 @@ class Post(db.Model):
     body=db.Column(db.Text)
     timestamp=db.Column(db.DateTime,index=True,default=datetime.utcnow)#时间戳
     author_id=db.Column(db.Integer,db.ForeignKey('users.id'))#作者ip
+    body_html=db.Column(db.Text)
     
     @staticmethod
     def generate_fake(count=100):
@@ -75,6 +78,16 @@ class Post(db.Model):
                    author=u)#简介
             db.session.add(p)
             db.session.commit()
+
+    @staticmethod#Post模型中处理markdown文本
+    def on_changed_body(target,value,oldvalue,initiator):#将body字段文本渲染成html格式，结果保存在body_html中
+        allowed_tags=['a','abbr','acronym','b','blockquote','code','em','i','li','ol','pre','strong','ul','h1','h2','h3','p']#允许的标签
+        target.body_html=bleach.linkify(bleach.clean(#clean()删除所有不在白名单的标签   linkify()将纯文本中的url转换成适当的<a>链接
+            markdown(value,output_format='html'),#markdowm函数将markdown文本转换html格式
+            tags=allowed_tags,strip=True))#允许的标签
+
+db.event.listen(Post.body,'set',Post.on_changed_body)#函数注册在body字段上，是SQLAlchemy "set"事件的监听程序
+                                                         #body字段设置新值，函数自动调用
 
 
 class User(UserMixin, db.Model):

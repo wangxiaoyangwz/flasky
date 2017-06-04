@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField,TextAreaField,BooleanField,SelectField
+from wtforms import StringField, SubmitField,TextAreaField,BooleanField,SelectField#WTForms支持的HTML标准字段
 from wtforms.validators import Required,Length,Email,Regexp
 from wtforms import ValidationError
 from ..models import Role, User
+from flask_pagedown.fields import PageDownField
 
 class NameForm(FlaskForm):#定义web表单类
     name = StringField('What is your name?', validators=[Required()])#属性，文本字段，检测函数，输入是否为空
@@ -48,7 +49,7 @@ class EditProfileAdminForm(FlaskForm):#管理员使用的资料编辑器
 
 
 class PostForm(FlaskForm):#博客文章表单
-	body=TextAreaField("What's on you mind?",validators=[Required()])#内容主体
+	body=PageDownField("What's on you mind?",validators=[Required()])#内容主体
 	submit=SubmitField('Submit')#提交
 
 

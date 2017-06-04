@@ -5,6 +5,12 @@ from flask_moment import Moment#时间
 from flask_sqlalchemy import SQLAlchemy#数据库
 from config import config#导入环境配置
 from flask_login import LoginManager
+from flask_pagedown import PageDown
+from flask import Flask
+from flask_bootstrap import Bootstrap
+from flask_mail import Mail
+
+
 
 
 #创建实例，创建扩展对象,没有向构造函数传入参数
@@ -12,6 +18,7 @@ bootstrap = Bootstrap()
 mail = Mail()
 moment = Moment()
 db = SQLAlchemy()
+pagedown=PageDown()
 
 login_manager=LoginManager()
 login_manager.session_protection='strong'#LoginManager对象的session_protection属性提供不同安全等级
@@ -32,6 +39,7 @@ def create_app(config_name):#工厂函数，，参数是程序使用的配置名
     moment.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
+    pagedown.init_app(app)
 
     #蓝本在工厂函数中注册到程序中
     from .main import main as main_blueprint
