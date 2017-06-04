@@ -1,23 +1,27 @@
 <ul class="posts">
     {% for post in posts %}
-        <li class="post">
-            <div class="post-thumbnail">
-                <a href="{{ url_for('.user', username=post.author.username) }}">
-                    <img class="img-rounded profile-thumbnail" src="{{ post.author.gravatar(size=40) }}">
+    <li class="post">
+        <div class="post-thumbnail">
+            <a href="{{ url_for('.user', username=post.author.username) }}">
+                <img class="img-rounded profile-thumbnail" src="{{ post.author.gravatar(size=40) }}">
+            </a>
+        </div>
+        <div class="post-content">
+            <div class="post-date">{{ moment(post.timestamp).fromNow() }}</div>
+            <div class="post-author"><a href="{{ url_for('.user', username=post.author.username) }}">{{ post.author.username }}</a></div>
+            <div class="post-body">
+                {% if post.body_html %}
+                    {{ post.body_html | safe }}
+                {% else %}
+                    {{ post.body }}
+                {% endif %}
+            </div>
+            <div class="post-footer">
+                <a href="{{ url_for('.post', id=post.id) }}">
+                    <span class="label label-default">Permalink</span>
                 </a>
             </div>
-            <div class="post-content">
-                <div class="post-date">{{ moment(post.timestamp).fromNow() }}</div>
-                <div class="post-author"><a href="{{ url_for('.user', username=post.author.username) }}">{{ post.author.username }}</a></div>
-                <div class="post-body">
-                    {% if post.body_html %}
-                        {{post.body_html | safe }}<!-- 渲染html格式内容时使用|safe后缀，目的是告许jinja2不要转义html元素 -->
-                    {% else %}
-                        {{ post.body }}
-                    {% endif %}
-                </div>
-                
-            </div>
-        </li>
+        </div>
+    </li>
     {% endfor %}
 </ul>

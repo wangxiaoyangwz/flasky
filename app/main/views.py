@@ -80,3 +80,8 @@ def edit_profile_admin(id):
 	form.location.data=user.location
 	form.about_me.data=user.about_me
 	return render_template('edit_profile.html',form=form,user=user)
+
+@main.route('/post/<int:id>')#id是插入数据库时分配的id，用于构建博客文章的url
+def post(id):
+	post=Post.query.get_or_404(id)
+	return render_template('post.html',posts=[post])#post.html接受列表作为参数，列表是要渲染的文章
