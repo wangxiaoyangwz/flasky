@@ -130,7 +130,7 @@ class User(UserMixin, db.Model):
                               cascade='all,delete-orphan')
 
     
-    def follow(Self,user):
+    def follow(self,user):
         if not self.is_following(user):#没关注
             f=Follow(follower=self,followed=user)#向Follow关联表中插入实例，将关注者和被关注者关联
             db.session.add(f)
