@@ -41,10 +41,10 @@
             {% endif %}
         {% endif %}
         <a href="{{url_for('.followers',username=user.username)}}"><!-- 关注我的人数 -->
-            Followers: <span class="badge">{{ user.followers.count() }}</span>
+            Followers: <span class="badge">{{ user.followers.count()-1 }}</span>
         </a>
         <a href="{{url_for('.followed_by',username=user.username)}}">
-            Following:<span class="badge">{{user.followed.count()}}</span><!-- 我关注的人数 -->
+            Following:<span class="badge">{{user.followed.count()-1}}</span><!-- 我关注的人数 -->
         </a>
         {% if current_user.is_authenticated and user != current_user and user.is_following(current_user) %}
             | <span class="label label-default">Follows you</span>

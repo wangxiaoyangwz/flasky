@@ -10,6 +10,7 @@
 <table class="table table-hover followers"><!-- 关注我的 -->
     <thead><tr><th>User</th><th>Since</th></tr></thead><!-- 表 用户列 时间列 -->
     {% for follow in follows %}
+    {% if follow.user != user %}<!-- 关注者列表中不显示自己 -->
     <tr><!-- 行 -->
         <td><!-- 表格 -->
             <a href="{{ url_for('.user', username = follow.user.username) }}">
@@ -19,6 +20,7 @@
         </td>
         <td>{{ moment(follow.timestamp).format('L') }}</td><!-- 时间 -->
     </tr>
+    {% endif %}
     {% endfor %}
 </table>
 <div class="pagination"><!-- 分页 -->

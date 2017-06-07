@@ -141,9 +141,13 @@ class User(UserMixin, db.Model):
             db.seesion.delete(f)
     
 
-    def is_following(self,user):#是否关注
-        return self.followed.filter_by(followed_id=user.id).first() is not None#当前用户关注对象中没有user，返回True
+    # def is_following(self,user):#是否关注
+    #     return self.followed.filter_by(followed_id=user.id).first() is not None#当前用户关注对象中没有user，返回True
+    def is_following(self, user):
+        return self.followed.filter_by(
+            followed_id=user.id).first() is not None
     
+
     def is_followed_by(self,user):#是否被user关注
         return self.followers.filter_by(follower_id=user.id).first() is not None
 
@@ -154,9 +158,10 @@ class User(UserMixin, db.Model):
                 self.role=Role.query.filter_by(permissions=0xff).first()#将权限是0xff的角色赋给基类对象
             if self.role is None:
                 self.role=Role.query.filter_by(default=True).first()#默认角色赋给基类对象
-            if self.email is not None and self.avatar_hash is None:#email不存在和散列值不存在
-                self.avatar_hash=hashlib.md5(self.email.encode('utf-8')).hexdigest()#生成md5 hash
-    
+        if self.email is not None and self.avatar_hash is None:#email不存在和散列值不存在
+            self.avatar_hash=hashlib.md5(self.email.encode('utf-8')).hexdigest()#生成md5 hash
+        # self.follow(self)
+        self.followed.append(Follow(followed=self))
     # @property
     # def followed_posts(self):#获取所关注用户的文章
     #     return Post.query.join(Follow,Follow.followed_id==Post.author_id).filter_by(Follow.follower_id==self.id)
@@ -275,6 +280,14 @@ class User(UserMixin, db.Model):
                 db.session.commit()
             except IntegrityError:#forgery_by随机生成的信息可能在数据库中有重复，抛出integrityError异常
                 db.session.rollback()#回滚会话，生成重复内容不会写入数据库
+
+    @staticmethod#将用户设为自己的关注者，创建函数更新数据库，用于更新已经部署的程序
+    def add_self_follows():
+        for user in User.query.all():
+            if not user.is_following(user):
+                user.follow(user)
+                db.session.add(user)
+                db.session.commit()
 
     # def __repr__(self):
     #     return '<User %r>' % self.username
