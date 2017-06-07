@@ -144,7 +144,7 @@ class User(UserMixin, db.Model):
     def is_following(self,user):#是否关注
         return self.followed.filter_by(followed_id=user.id).first() is not None#当前用户关注对象中没有user，返回True
     
-    def is_foollowed_by(self,user):#是否被user关注
+    def is_followed_by(self,user):#是否被user关注
         return self.followers.filter_by(follower_id=user.id).first() is not None
 
     def __init__(self,**kwargs):#定义默认角色是用户，是构造函数
@@ -157,10 +157,14 @@ class User(UserMixin, db.Model):
             if self.email is not None and self.avatar_hash is None:#email不存在和散列值不存在
                 self.avatar_hash=hashlib.md5(self.email.encode('utf-8')).hexdigest()#生成md5 hash
     
+    # @property
+    # def followed_posts(self):#获取所关注用户的文章
+    #     return Post.query.join(Follow,Follow.followed_id==Post.author_id).filter_by(Follow.follower_id==self.id)
+    #     # 返回的是文章                # 该文章 作者的id==我关注的人的id         #过滤当前用户的id
     @property
-    def followed_posts(self):#获取所关注用户的文章
-        return Post.query.join(Follow,Follow.followed_id==post.author_id).filter_by(Follow.follower_id==self.id)
-        # 返回的是文章                # 该文章 作者的id==我关注的人的id         #过滤当前用户的id
+    def followed_posts(self):
+        return Post.query.join(Follow, Follow.followed_id == Post.author_id)\
+            .filter(Follow.follower_id == self.id)
 
     def ping(self):#刷新用户的最后访问时间
         self.last_seen=datetime.utcnow()

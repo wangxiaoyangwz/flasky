@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*- 
 #蓝本中定义程序路由
-from flask import render_template, redirect, url_for, abort, flash,request,current_app
+from flask import render_template, redirect, url_for, abort, flash,request,current_app, make_response
 from flask_login import login_required, current_user
 from . import main
 from .forms import EditProfileForm,EditProfileAdminForm,PostForm,NameForm
@@ -21,14 +21,24 @@ def index():#路由，处理博客文章，分页显示博客文章
 	    return redirect(url_for('.index'))
 	posts=Post.query.order_by(Post.timestamp.desc()).all()#从数据库中查询，并按照时间排序
 	page=request.args.get('page',1,type=int)#c查询字符串request.args-->指出渲染的页数，没有明确指出，默认第一页，type=int 保证参数不能换成整数时，返回默认值
-	pagination=Post.query.order_by(Post.timestamp.desc()).paginate(#为显示某页的记录，all()换成paginate(),参数1.【必须】页数 2、指定每页显示的记录数量
-		                                                           #若没有指定默认20 
-		                                                           #
-		page,per_page=current_app.config['FLASKY_POSTS_PER_PAGE'], #per_page的值从程序的环境变量FLASKY_POSTS_PER_PAGE中读取
-		error_out=False)#3、True时请求超出范围，返回404，False时返回空列表
+	show_followed=False #决定显示全部文章还是关注用户的文章
+	if current_user.is_authenticated:
+		show_followed=bool(request.cookies.get('show_followed',''))#cookies的show_followed字段中
+	if show_followed:#如果为非空字符串
+		query=current_user.followed_posts#表示显示所关注用户的文章，根据得到的值设定本地变量query的值
+	else:
+		query=Post.query#query的值决定获取全部文章的查询还是关注用户的文章的查询
+	# pagination=Post.query.order_by(Post.timestamp.desc()).paginate(#为显示某页的记录，all()换成paginate(),参数1.【必须】页数 2、指定每页显示的记录数量
+	# 	                                                           #若没有指定默认20 
+	# 	                                                           #
+	# 	page,per_page=current_app.config['FLASKY_POSTS_PER_PAGE'], #per_page的值从程序的环境变量FLASKY_POSTS_PER_PAGE中读取
+	# 	error_out=False)#3、True时请求超出范围，返回404，False时返回空列表
+	pagination = query.order_by(Post.timestamp.desc()).paginate(
+        page, per_page=current_app.config['FLASKY_POSTS_PER_PAGE'],
+        error_out=False)
 	posts=pagination.items
-	return render_template('index.html',form=form,posts=posts,pagination=pagination)
-
+	return render_template('index.html', form=form, posts=posts,
+	                       show_followed=show_followed, pagination=pagination)
 @main.route('/user/<username>')#资料页面的路由
 def user(username):
 	user=User.query.filter_by(username=username).first()
@@ -52,7 +62,7 @@ def edit_profile():
 	form.name.data=current_user.name#当返回false时，表单中的字段使用保存在current_user中的初始值
 	form.location.data=current_user.location
 	form.about_me.data=current_user.about_me
-	return render_template('edit_profile.html',form=form)
+	return render_template('edit_profile.html', form=form)
 
 
 @main.route('/edit-profile/<int:id>',methods=['GET','POST'])#用户由id指定
@@ -60,10 +70,10 @@ def edit_profile():
 @admin_required
 def edit_profile_admin(id):
 	user=User.query.get_or_404(id)#如果提供的id不正确，返回404错误
-	form=EditProfileAdminForm()
-	if form.validate_on_submit:
+	form=EditProfileAdminForm(user=user)
+	if form.validate_on_submit():
 		user.email=form.email.data
-		user.username=form.usernmae.data
+		user.username=form.username.data
 		user.confirmed=form.confirmed.data
 		user.role=Role.query.get(form.role.data)##数字标识符表示角色选项，字段的data属性获取id查询时使用提取的id加载角色对象，
 		user.name=form.name.data
@@ -73,7 +83,7 @@ def edit_profile_admin(id):
 		flash('The profile has been updated.')
 		return redirect(url_for('.user',username=user.username))
 	form.email.data=user.email
-	form.usernmae.data=user.username
+	form.username.data=user.username
 	form.confirmed.data=user.confirmed
 	form.role.data=user.role_id#设置字段初始值
 	form.name.data=user.name
@@ -92,7 +102,7 @@ def post(id):
 def edit(id):
 	post=Post.query.get_or_404(id)
 	if current_user!=post.author and \
-	        not current_user.can(Permission.ADMINISTED):#允许文章作者和管理员编辑
+	        not current_user.can(Permission.ADMINISTER):#允许文章作者和管理员编辑
 	    abort(403)
 	form=PostForm()
 	if form.validate_on_submit():
@@ -162,3 +172,19 @@ def followed_by(username):#关注者路由和视图函数
 	         for item in pagination.items]
 	return render_template('followers.html',user=user,title='Followed by',endpoint='.followed_by',
 		                    pagination=pagination,follows=follows)
+
+
+@main.route('/all')
+@login_required
+def show_all():
+    resp = make_response(redirect(url_for('.index')))
+    resp.set_cookie('show_followed', '', max_age=30*24*60*60)
+    return resp
+
+
+@main.route('/followed')
+@login_required
+def show_followed():
+    resp = make_response(redirect(url_for('.index')))
+    resp.set_cookie('show_followed', '1', max_age=30*24*60*60)
+    return resp
