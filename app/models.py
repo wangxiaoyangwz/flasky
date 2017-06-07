@@ -90,6 +90,13 @@ db.event.listen(Post.body,'set',Post.on_changed_body)#函数注册在body字段�
                                                          #body字段设置新值，函数自动调用
 
 
+class Follow(db.Model):
+    __tablename__='follows'
+    follower_id=db.Column(db.Integer,db.ForeignKey('users.id'),primary_key=True)
+    followed_id=db.Column(db.Integer,db.ForeignKey('users.id'),primary_key=True)
+    timestamp=db.Column(db.DateTime, default = datetime.utcnow)
+
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -106,6 +113,39 @@ class User(UserMixin, db.Model):
     avatar_hash=db.Column(db.String(32))
     posts=db.relationship('Post',backref='author',lazy='dynamic')
 
+    #使用关系将不同表中的行联系起来，返回与被关注者相关联的Follow列表
+    followed=db.relationship('Follow',#表明这个关系的另一端是哪个模型
+                             foreign_keys=[Follow.follower_id],
+                             backref=db.backref('follower',lazy='joined'),#backref参数向Follow模型中添加一个follower关系，定义反向关系
+                                                                          #joined实现从联结查询中加载相关对象
+                                                                          #不指定两个关系间的引用关系，回引Follow模型
+                             lazy='dynamic',#指定如何加载相关记录 ”dynamic“不加载记录”joined“加载记录使用联结
+
+                             cascade='all,delete-orphan')#父对象操作影响相关对象，层叠选项  的删除默认相关对象外键设为空值
+                                                          #实际应该指向记录的实体删除
+    followers=db.relationship('Follow',
+                              foreign_keys=[Follow.followed_id],
+                              backref=db.backref('followed',lazy='joined'),
+                              lazy='dynamic',
+                              cascade='all,delete-orphan')
+
+    
+    def follow(Self,user):
+        if not self.is_following(user):#没关注
+            f=Follow(follower=self,followed=user)#向Follow关联表中插入实例，将关注者和被关注者关联
+            db.session.add(f)
+
+    def unfollow(self,user):#取消关注
+        f=self.followed.filter_by(followed_id=user.id).first()
+        if f:#用户已关注
+            db.seesion.delete(f)
+    
+
+    def is_following(self,user):#是否关注
+        return self.followed.filter_by(followed_id=user.id).first() is not None#当前用户关注对象中没有user，返回True
+    
+    def is_foollowed_by(self,user):#是否被user关注
+        return self.followers.filter_by(follower_id=user.id).first() is not None
 
     def __init__(self,**kwargs):#定义默认角色是用户，是构造函数
         super(User,self).__init__(**kwargs)#调用基类的构造函数
