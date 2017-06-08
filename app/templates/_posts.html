@@ -1,3 +1,4 @@
+<!-- all文章的渲染 -->
 <ul class="posts">
     {% for post in posts %}
     <li class="post">
@@ -11,7 +12,7 @@
             <div class="post-author"><a href="{{ url_for('.user', username=post.author.username) }}">{{ post.author.username }}</a></div>
             <div class="post-body">
                 {% if post.body_html %}
-                    {{ post.body_html | safe }}
+                    {{ post.body_html | safe }}<!-- 使用|后缀告诉jinja2不要转义html元素 -->
                 {% else %}
                     {{ post.body }}
                 {% endif %}
@@ -27,6 +28,11 @@
                 {% elif current_user.is_administrator() %}
                 <a href="{{url_for('.edit',id=post.id)}}">
                     <span class="label label-danger">Edit [Admin]</span>
+                </a>
+                <a href="{{url_for('.post',id=post.id)}} #comments"><!-- url后加#comments --><!-- 称为url片段，指定加载页面后滚动条所在的初始位置，会寻找id=url片段的元素并滚动页面 -->
+                    <span class="label label-primary">
+                        {{post.comments.count()}}Couments
+                    </span>
                 </a>
                 {% endif %}
             </div>

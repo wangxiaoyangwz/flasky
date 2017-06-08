@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import UserMixin,AnonymousUserMixin#!!
 from datetime import datetime
 import hashlib
-from markdown import markdown
+from markdown import markdown#增加富文本的预览功能
 import bleach
 
 
@@ -59,7 +59,8 @@ class Post(db.Model):
     body=db.Column(db.Text)
     timestamp=db.Column(db.DateTime,index=True,default=datetime.utcnow)#时间戳
     author_id=db.Column(db.Integer,db.ForeignKey('users.id'))#作者ip
-    body_html=db.Column(db.Text)
+    body_html=db.Column(db.Text)#后面在赋值
+    comments=db.relationship('Comment',backref='post',lazy='dynamic')
     
     @staticmethod
     def generate_fake(count=100):
@@ -96,6 +97,26 @@ class Follow(db.Model):
     followed_id=db.Column(db.Integer,db.ForeignKey('users.id'),primary_key=True)
     timestamp=db.Column(db.DateTime, default = datetime.utcnow)
 
+class Comment(db.Model):
+    __tablename__='comments'
+    id=db.Column(db.Integer,primary_key=True)
+    body=db.Column(db.Text)
+    body_html=db.Column(db.Text)#提交markdown源文件，server上将markdown转换成html使用Markdown
+    timestamp=db.Column(db.DateTime,index=True,default=datetime.utcnow)
+    disable=db.Column(db.Boolean)#用于管理员查禁不当评论
+    author_id=db.Column(db.Integer,db.ForeignKey('users.id'))
+    post_id=db.Column(db.Integer,db.ForeignKey('posts.id'))
+
+    @staticmethod
+    def on_changed_body(target,value,oldvalue,initiator):
+        allow_tags=['a','abbr','acronym','b','code','em','i','strong']#只留下格式化标签
+        target.body_html=bleach.linkify(bleach.clean(
+            markdown(value,output_format='html'),
+            tags=allow_tags,strip=True))
+db.event.listen(Comment.body,'set',Comment.on_changed_body)#函数注册在body字段上，是SQLAlchemy "set"事件的监听程序
+                                                         #body字段设置新值，函数自动调用
+
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -112,6 +133,7 @@ class User(UserMixin, db.Model):
     last_seen=db.Column(db.DateTime(),default=datetime.utcnow)#最后访问日期
     avatar_hash=db.Column(db.String(32))
     posts=db.relationship('Post',backref='author',lazy='dynamic')
+    comments=db.relationship('Comment',backref='author',lazy='dynamic')
 
     #使用关系将不同表中的行联系起来，返回与被关注者相关联的Follow列表
     followed=db.relationship('Follow',#表明这个关系的另一端是哪个模型

@@ -1,3 +1,4 @@
+<!-- 文章修改 -->
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
@@ -13,5 +14,5 @@
 
 {% block scripts %}
 {{super()}}
-{{ pagedown.include_pagedown() }}
+{{ pagedown.include_pagedown() }}<!-- markdown转换为html -->
 {% endblock %}

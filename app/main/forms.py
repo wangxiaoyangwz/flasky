@@ -52,4 +52,6 @@ class PostForm(FlaskForm):#博客文章表单
 	body=PageDownField("What's on you mind?",validators=[Required()])#内容主体
 	submit=SubmitField('Submit')#提交
 
-
+class CommentForm(FlaskForm):#评论输入表单
+	body=StringField('',validators=[Required()])
+	submit=SubmitField('Submit')

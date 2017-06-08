@@ -3,9 +3,9 @@
 from flask import render_template, redirect, url_for, abort, flash,request,current_app, make_response
 from flask_login import login_required, current_user
 from . import main
-from .forms import EditProfileForm,EditProfileAdminForm,PostForm,NameForm
+from .forms import EditProfileForm,EditProfileAdminForm,PostForm,NameForm,CommentForm
 from .. import db
-from ..models import Role, User,Permission,Post
+from ..models import Role, User,Permission,Post,Comment
 from ..decorators import admin_required,permission_required
 
 
@@ -91,11 +91,27 @@ def edit_profile_admin(id):
 	form.about_me.data=user.about_me
 	return render_template('edit_profile.html',form=form,user=user)
 
-@main.route('/post/<int:id>')#id是插入数据库时分配的id，用于构建博客文章的url
+@main.route('/post/<int:id>',methods=['GET','POST'])#id是插入数据库时分配的id，用于构建博客文章的url
 def post(id):
 	post=Post.query.get_or_404(id)
-	return render_template('post.html',posts=[post])#post.html接受列表作为参数，列表是要渲染的文章
-
+	form=CommentForm()#评论表单实例化
+	if form.validate_on_submit():
+		comment=Comment(body=form.body.data,
+			            post=post,
+			            author=current_user._get_current_object())
+		db.session.add(comment)
+		flash('Your commet has been published.')
+		return redirect(url_for('.post',id=post.id,page=-1))#page=-1写在url上，所以刚提交的评论才能显示在首页
+	page=request.args.get('page',1,type=int)#查询字符串中获取页数
+	if page==-1:#请求评论中的最后一页
+		page=(post.comments.count()-1) / \
+		      current_app.config['FLASKY_COMMENTS_PER_PAGE']+1#计算评论的总和和总页数得到真正显示的页数
+	pagination=post.comments.order_by(Comment.timestamp.asc()).paginate(
+		page,per_page=current_app.config['FLASKY_COMMENTS_PER_PAGE'],
+		error_out=False)
+	comments=pagination.items
+	return render_template('post.html',posts=[post],form=form,
+		                   comments=comments,pagination=pagination)
 
 @main.route('/edit/<int:id>',methods=['GET','POST'])
 @login_required
@@ -188,3 +204,4 @@ def show_followed():
     resp = make_response(redirect(url_for('.index')))
     resp.set_cookie('show_followed', '1', max_age=30*24*60*60)
     return resp
+
