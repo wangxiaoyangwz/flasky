@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block page_content %}
+<div class="page-header">
+	<h1>Comment Moderation</h1>
+</div>
+{% set moderate=True %}<!-- jinjia2提供set指令定义模版变量，在_comments.html中决定是否渲染评论管理功能 -->
+{% include '_comments.html' %}
+{% if pagination %}
+<div class="pagination">
+	{{macros.pagination_widget(pagination,'.moderate')}}
+</div>
+{% endif %}
+{% endblock %}

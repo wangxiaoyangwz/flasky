@@ -53,5 +53,5 @@ class PostForm(FlaskForm):#博客文章表单
 	submit=SubmitField('Submit')#提交
 
 class CommentForm(FlaskForm):#评论输入表单
-	body=StringField('',validators=[Required()])
+	body=PageDownField('',validators=[Required()])
 	submit=SubmitField('Submit')

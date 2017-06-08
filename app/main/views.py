@@ -205,3 +205,33 @@ def show_followed():
     resp.set_cookie('show_followed', '1', max_age=30*24*60*60)
     return resp
 
+@main.route('/moderate')#管理评论的路由
+@login_required
+@permission_required(Permission.MODERATE_COMMENTS)
+def moderate():
+	page=request.args.get('page',1,type=int)#得到当前页数
+	pagination=Comment.query.order_by(Comment.timestamp.desc()).paginate(#
+		page,per_page=current_app.config['FLASKY_COMMENTS_PER_PAGE'],
+		error_out=False)
+	comments=pagination.items#某页评论列表
+	return render_template('moderate.html',comments=comments,pagination=pagination,
+		                   page=page)
+
+@main.route('/moderate/enable<int:id>')#启用路由
+@login_required
+@permission_required(Permission.MODERATE_COMMENTS)
+def moderate_enable(id):#
+	comment=Comment.query.get_or_404(id)
+	comment.disabled=False
+	db.session.add(comment)
+	return redirect(url_for('.moderate',page=request.args.get('page',1,type=int)))
+
+@main.route('/moderate/disable/<int:id>')#禁用路由
+@login_required
+@permission_required(Permission.MODERATE_COMMENTS)
+def moderate_disable(id):
+	comment=Comment.query.get_or_404(id)#加载评论对象
+	comment.disabled=True#设置disabled字段
+	db.session.add(comment)
+	return redirect(url_for('.moderate',page=request.args.get('page',1,type=int)))
+                                                #查询字符串，指定页数会返回该页
